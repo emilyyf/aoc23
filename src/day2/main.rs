@@ -59,14 +59,21 @@ fn main() {
     }
 
     for game in games {
-        println!("{:?}", game);
-        sum = sum + game.id;
+        let mut max_red: u32 = 0;
+        let mut max_green: u32 = 0;
+        let mut max_blue: u32 = 0;
         for throw in game.throws {
-            if throw.red > 12 || throw.green > 13 || throw.blue > 14 {
-                sum = sum - game.id;
-                break;
+            if throw.red > max_red {
+                max_red = throw.red;
+            }
+            if throw.green > max_green {
+                max_green = throw.green;
+            }
+            if throw.blue > max_blue {
+                max_blue = throw.blue;
             }
         }
+        sum = sum + (max_red * max_blue * max_green);
     }
 
     println!("Result: {}", sum);
