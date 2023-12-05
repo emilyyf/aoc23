@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
 
@@ -5,13 +6,61 @@ fn is_number(c: char) -> bool {
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].contains(&c)
 }
 
-fn is_symbol(c: char) -> bool {
-    !['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'].contains(&c)
+fn is_star(c: char) -> bool {
+    c == '*'
+}
+
+fn is_gear(i: usize, j: usize, grid: Vec<Vec<char>>) -> bool {
+    let first_line = if i > 0 { i - 1 } else { 0 };
+    let first_num = if j > 0 { j - 1 } else { 0 };
+    let last_line = if i < 139 { i + 1 } else { 139 };
+    let last_num = if j < 139 { j + 1 } else { 139 };
+    let mut nums = HashSet::new();
+
+    for i in first_line..=last_line {
+        for j in first_num..=last_num {
+            if is_number(grid[i][j]) {
+                let (num, _) = get_full_number(j, grid[i].clone());
+                nums.insert(num);
+            }
+        }
+    }
+
+    nums.len() == 2
+}
+
+fn get_gear_nums(i: usize, j: usize, grid: Vec<Vec<char>>) -> (u32, u32) {
+    let first_line = if i > 0 { i - 1 } else { 0 };
+    let first_num = if j > 0 { j - 1 } else { 0 };
+    let last_line = if i < 139 { i + 1 } else { 139 };
+    let last_num = if j < 139 { j + 1 } else { 139 };
+    let mut points: Vec<u32> = Vec::new();
+    let mut nums = HashSet::new();
+
+    for i in first_line..=last_line {
+        for j in first_num..=last_num {
+            if is_number(grid[i][j]) {
+                let (num, _) = get_full_number(j, grid[i].clone());
+                nums.insert(num);
+            }
+        }
+    }
+
+    for i in nums {
+        points.push(i);
+    }
+
+    (*points.get(0).unwrap(), *points.get(1).unwrap())
 }
 
 fn get_full_number(start: usize, line: Vec<char>) -> (u32, usize) {
     let mut buf: Vec<char> = Vec::new();
     let mut i: usize = start;
+
+    while is_number(line[i - 1]) && i > 0 {
+        i -= 1;
+    }
+
     while i < 140 {
         if is_number(line[i]) {
             buf.push(line[i]);
@@ -30,23 +79,6 @@ fn get_full_number(start: usize, line: Vec<char>) -> (u32, usize) {
             .unwrap(),
         i - 1,
     )
-}
-
-fn is_part(first: usize, last: usize, line: usize, grid: Vec<Vec<char>>) -> bool {
-    let first_line = if line > 0 { line - 1 } else { 0 };
-    let first_num = if first > 0 { first - 1 } else { 0 };
-    let last_line = if line < 139 { line + 1 } else { 139 };
-    let last_num = if last < 139 { last + 1 } else { 139 };
-
-    for i in first_line..=last_line {
-        for j in first_num..=last_num {
-            if is_symbol(grid[i][j]) {
-                return true;
-            }
-        }
-    }
-
-    false
 }
 
 fn main() {
@@ -70,15 +102,13 @@ fn main() {
     while i < 140 {
         j = 0;
         while j < 140 {
-            if is_number(grid[i][j]) {
-                let (num, last) = get_full_number(j, grid[i].clone());
-                if is_part(j, last, i, grid.clone()) {
-                    sum += num;
+            if is_star(grid[i][j]) {
+                if is_gear(i, j, grid.clone()) {
+                    let (num1, num2) = get_gear_nums(i, j, grid.clone());
+                    sum += num1 * num2;
                 }
-                j = last + 1;
-            } else {
-                j += 1;
             }
+            j += 1;
         }
         i += 1;
     }
